@@ -9,7 +9,14 @@ import numpy as np
 from typing import Optional, Tuple
 
 from dp_econometrics.privacy import PrivacyAccountant
-from dp_econometrics.models import DPOLS, DPOLSResults, DPLogit, DPLogitResults
+from dp_econometrics.models import (
+    DPOLS,
+    DPOLSResults,
+    DPLogit,
+    DPLogitResults,
+    DPFixedEffects,
+    DPFixedEffectsResults,
+)
 
 
 class PrivacySession:
@@ -270,6 +277,82 @@ class PrivacySession:
             delta=query_delta,
             query_name=f"logit_{self.queries + 1}",
             query_type="logit"
+        )
+
+        return result
+
+    def fe(
+        self,
+        y: np.ndarray,
+        X: np.ndarray,
+        groups: np.ndarray,
+        epsilon: Optional[float] = None,
+        bounds_X: Optional[Tuple[float, float]] = None,
+        bounds_y: Optional[Tuple[float, float]] = None,
+    ) -> DPFixedEffectsResults:
+        """
+        Run differentially private fixed effects regression.
+
+        Uses within transformation to eliminate fixed effects, then
+        applies noisy sufficient statistics.
+
+        Parameters
+        ----------
+        y : np.ndarray
+            Response variable.
+        X : np.ndarray
+            Design matrix (no constant - absorbed by FE).
+        groups : np.ndarray
+            Group/entity identifiers.
+        epsilon : float, optional
+            Epsilon budget for this query. If None, uses 10% of remaining.
+        bounds_X : tuple, optional
+            Bounds on X. Uses session default if not provided.
+        bounds_y : tuple, optional
+            Bounds on y. Uses session default if not provided.
+
+        Returns
+        -------
+        DPFixedEffectsResults
+            Results with coefficients, standard errors, etc.
+
+        Raises
+        ------
+        ValueError
+            If privacy budget is exhausted.
+        """
+        # Allocate budget
+        query_eps, query_delta = self._allocate_budget(epsilon=epsilon)
+
+        # Check if we can afford this query
+        if not self._accountant.can_afford(query_eps, query_delta):
+            raise ValueError(
+                f"Privacy budget exhausted. "
+                f"Requested ε={query_eps:.4f}, available ε={self.epsilon_remaining:.4f}"
+            )
+
+        # Use session defaults if bounds not provided
+        if bounds_X is None:
+            bounds_X = self.bounds_X
+        if bounds_y is None:
+            bounds_y = self.bounds_y
+
+        # Create and fit model
+        model = DPFixedEffects(
+            epsilon=query_eps,
+            delta=query_delta,
+            bounds_X=bounds_X,
+            bounds_y=bounds_y,
+        )
+
+        result = model.fit(y, X, groups)
+
+        # Record privacy expenditure
+        self._accountant.spend(
+            epsilon=query_eps,
+            delta=query_delta,
+            query_name=f"fe_{self.queries + 1}",
+            query_type="fixed_effects"
         )
 
         return result
