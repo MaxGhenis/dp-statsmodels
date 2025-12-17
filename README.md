@@ -73,6 +73,7 @@ New to differential privacy? Start here:
 - **[Choosing Epsilon](docs/guides/choosing_epsilon.md)**: How to select privacy parameters for your analysis
 - **[Setting Bounds](docs/guides/setting_bounds.md)**: How to determine appropriate data bounds
 - **[Validation Servers](docs/guides/validation_servers.md)**: Workflow guide for secure computing environments
+- **[Reproducibility](docs/guides/reproducibility.md)**: How to get reproducible results with `random_state`
 
 ## Supported Models
 
