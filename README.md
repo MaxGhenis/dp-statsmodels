@@ -63,7 +63,16 @@ print(f"Remaining: ε = {session.epsilon_remaining:.3f}")
 - **Privacy Budget Tracking**: Automatically tracks cumulative privacy loss across queries
 - **Valid Inference**: Standard errors account for both sampling and privacy noise
 - **Familiar API**: Similar to statsmodels for easy adoption
-- **Explicit Bounds**: Supports explicit data bounds for proper DP guarantees
+- **Explicit Bounds**: Requires explicit data bounds for proper DP guarantees
+- **Reproducibility**: Optional `random_state` parameter for reproducible results
+
+## Guides
+
+New to differential privacy? Start here:
+
+- **[Choosing Epsilon](docs/guides/choosing_epsilon.md)**: How to select privacy parameters for your analysis
+- **[Setting Bounds](docs/guides/setting_bounds.md)**: How to determine appropriate data bounds
+- **[Validation Servers](docs/guides/validation_servers.md)**: Workflow guide for secure computing environments
 
 ## Supported Models
 
@@ -81,6 +90,8 @@ This library is designed for **validation server** architectures where researche
 2. Submit code to run on confidential data
 3. Receive results with privacy guarantees
 4. Privacy budget accumulates across queries
+
+See the [Validation Servers Guide](docs/guides/validation_servers.md) for detailed workflow documentation.
 
 ## Documentation
 

@@ -32,6 +32,13 @@ This library is designed for **validation server** architectures where:
 3. Each query consumes privacy budget
 4. Results include proper uncertainty quantification
 
+See the [Validation Servers Guide](guides/validation_servers.md) for detailed workflow documentation.
+
+## Practical Guides
+
+- **[Choosing Epsilon](guides/choosing_epsilon.md)**: How to select privacy parameters based on data sensitivity and sample size
+- **[Setting Bounds](guides/setting_bounds.md)**: How to determine appropriate data bounds for valid privacy guarantees
+
 ## Quick Example
 
 ```python
