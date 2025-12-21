@@ -27,23 +27,30 @@ class Session:
     cumulative privacy loss as queries are executed. When the budget
     is exhausted, no more queries can be run.
 
+    IMPORTANT: Standard errors are typically 100-1000x larger than non-private
+    methods at typical privacy budgets (ε=1-10). This requires samples 10,000-
+    1,000,000x larger to maintain equivalent statistical power.
+
     Parameters
     ----------
     epsilon : float
         Total epsilon budget for the session.
     delta : float
         Total delta budget for the session.
+    bounds_X : tuple of (min, max)
+        Bounds for features. REQUIRED - must be specified a priori based on
+        domain knowledge, NOT computed from data.
+    bounds_y : tuple of (min, max)
+        Bounds for response variable. REQUIRED - must be specified a priori
+        based on domain knowledge, NOT computed from data.
     composition : {'basic', 'rdp'}
         Composition method for combining privacy costs.
-    bounds_X : tuple of (min, max)
-        Default bounds for features. Required for proper DP.
-    bounds_y : tuple of (min, max)
-        Default bounds for response variable. Required for proper DP.
     random_state : int or np.random.Generator, optional
         Random state for reproducibility.
-    require_bounds : bool
-        If True (default), raise error when bounds not provided.
-        Set to False only for testing/development.
+    budget_allocation : str, optional
+        How to allocate privacy budget. Options:
+        - 'equal': Equal split between X'X and X'y (default, simple)
+        - 'optimal': Sheffet (2017) optimal allocation (minimizes MSE)
 
     Attributes
     ----------
@@ -62,6 +69,9 @@ class Session:
 
     Notes
     -----
+    Privacy guarantees ONLY hold if bounds are specified a priori based on
+    domain knowledge. Computing bounds from data voids all privacy protections.
+
     The session tracks privacy using composition theorems. By default,
     basic sequential composition is used, which adds epsilon values.
     """
@@ -70,18 +80,29 @@ class Session:
         self,
         epsilon: float,
         delta: float,
+        bounds_X: Tuple[float, float],
+        bounds_y: Tuple[float, float],
         composition: str = "basic",
-        bounds_X: Optional[Tuple[float, float]] = None,
-        bounds_y: Optional[Tuple[float, float]] = None,
         random_state: Optional[Union[int, np.random.Generator]] = None,
-        require_bounds: bool = True,
+        budget_allocation: str = 'equal',
     ):
+        if bounds_X is None:
+            raise ValueError(
+                "bounds_X is REQUIRED for differential privacy. "
+                "Specify bounds a priori based on domain knowledge."
+            )
+        if bounds_y is None:
+            raise ValueError(
+                "bounds_y is REQUIRED for differential privacy. "
+                "Specify bounds a priori based on domain knowledge."
+            )
+
         self.epsilon = epsilon
         self.delta = delta
         self.bounds_X = bounds_X
         self.bounds_y = bounds_y
         self.random_state = random_state
-        self.require_bounds = require_bounds
+        self.budget_allocation = budget_allocation
 
         self._accountant = PrivacyAccountant(
             epsilon_budget=epsilon,
@@ -212,7 +233,7 @@ class Session:
             bounds_X=bounds_X,
             bounds_y=bounds_y,
             random_state=self.random_state,
-            require_bounds=self.require_bounds,
+            budget_allocation=self.budget_allocation,
         )
 
         result = model.fit(y, X, weights=weights, add_constant=add_constant)

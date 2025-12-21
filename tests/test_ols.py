@@ -453,34 +453,25 @@ class TestDPOLSDataBounds:
 
         assert hasattr(result, "params")
 
-    def test_missing_bounds_raises_error_by_default(self):
-        """Missing bounds should raise error by default."""
+    def test_missing_bounds_raises_error(self):
+        """Missing bounds should raise error - bounds are REQUIRED for valid DP."""
+        # Session without bounds should raise TypeError (required args)
+        with pytest.raises(TypeError):
+            PrivacySession(epsilon=5.0, delta=1e-5)
+
+    def test_bounds_required_enforced(self):
+        """Bounds must be provided - auto-bounds feature removed (voids privacy)."""
         np.random.seed(42)
         n = 500
         X = np.random.randn(n, 2)
         y = X @ [1, 2] + np.random.randn(n)
 
-        # Session without bounds should raise error
-        session = PrivacySession(epsilon=5.0, delta=1e-5)
-
-        with pytest.raises(ValueError, match="bounds.*required"):
-            session.ols(y, X)
-
-    def test_require_bounds_false_allows_auto_bounds(self):
-        """With require_bounds=False, should warn but proceed."""
-        np.random.seed(42)
-        n = 500
-        X = np.random.randn(n, 2)
-        y = X @ [1, 2] + np.random.randn(n)
-
+        # With bounds provided, should work
         session = PrivacySession(
             epsilon=5.0, delta=1e-5,
-            require_bounds=False
+            bounds_X=(-4, 4), bounds_y=(-15, 15)
         )
-
-        with pytest.warns(UserWarning, match="[Bb]ounds|[Pp]rivacy"):
-            result = session.ols(y, X)
-
+        result = session.ols(y, X)
         assert hasattr(result, "params")
 
 
