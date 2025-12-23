@@ -35,7 +35,7 @@ project:
     - file: intro.md
     - title: Paper
       children:
-        - file: paper/dp_regression_paper.ipynb
+        - file: paper/index.md
     - file: references.md
 
 site:
